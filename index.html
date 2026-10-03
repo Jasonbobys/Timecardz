@@ -241,7 +241,7 @@ const OWNER_EMAILS = ["paxakz21345@gmail.com", "paxa_kz@hotmail.com"];
       workers: {}, workersReady: false, wDays: {}, wSends: {},
       tab: "team", sel: null, confirmRemove: false, confirmReset: false,
       authMode: "signin", authMsg: "", authErr: false, busy: false,
-      joinMsg: "", toast: "", toastErr: false, draft: {}
+      joinMsg: "", toast: "", toastErr: false, draft: {}, justLinked: null
     };
   }
   S = freshState();
@@ -593,7 +593,6 @@ const OWNER_EMAILS = ["paxakz21345@gmail.com", "paxa_kz@hotmail.com"];
     const days = periodDays(start);
     const total = periodTotal(days, S.days, rnd);
     const sent = S.sends[keyOf(start)];
-    const payEmail = S.pub.payEmail;
 
     return [
       topbar(S.pub.businessName || "Time Clock", "Hi, " + S.me.name),
@@ -610,12 +609,12 @@ const OWNER_EMAILS = ["paxakz21345@gmail.com", "paxa_kz@hotmail.com"];
       h("div", { class: "total" }, h("span", null, "2-week total"), h("strong", null, fmtDur(total))),
       rnd ? h("p", { class: "note" }, "Hours are rounded to " + rnd + " minutes in your favor.") : null,
       h("div", { class: "spacer" }),
-      payEmail
-        ? h("button", { class: "btn", type: "button", onclick: () => sendCard(start, days, rnd, total, S.days) },
-            sent ? "Send again" : "Send timecard", h("small", null, "Opens your email, ready to send to " + payEmail))
-        : h("div", { class: "msg" }, "Your boss hasn't set an email for timecards yet."),
-      sent ? h("p", { class: "note", style: "text-align:center;margin-top:8px" }, "Sent " + fmtWhen(sent.sentAt) + ". ",
-        sent.cardId ? h("a", { href: cardLink(sent.cardId), target: "_blank", rel: "noopener", style: "color:var(--ink)" }, "View sent copy") : null) : null,
+      h("button", { class: "btn", type: "button", onclick: () => sendCard(start, days, rnd, total, S.days) },
+        sent ? "Make a new link" : "Copy timecard link",
+        h("small", null, sent ? "Use this if you changed any times since your last link" : "Saves a copy of your card and copies the link")),
+      sent && sent.cardId
+        ? linkBox(sent.cardId, S.justLinked && S.justLinked.key === keyOf(start) ? "Link copied ✓" : "Your timecard link", sent.sentAt)
+        : null,
       resetBlock(start, days, sent),
       h("p", { class: "note", style: "text-align:center;margin-top:18px" },
         "Tap any time to fix it. ",
@@ -627,15 +626,18 @@ const OWNER_EMAILS = ["paxakz21345@gmail.com", "paxa_kz@hotmail.com"];
     const todayK = keyOf(new Date());
     const out = [];
     if (todayK === keyOf(addDays(start, 11)) && !S.sends[keyOf(start)])
-      out.push(h("div", { class: "msg" }, h("b", null, "Today is payday. "), "When you clock out, tap Send timecard at the bottom."));
+      out.push(h("div", { class: "msg" }, h("b", null, "Today is payday. "), "When you clock out, tap Copy timecard link at the bottom and email it to whoever handles pay."));
     // Forgot to send last period's card? It can still be sent for a week after payday.
     const prev = addDays(start, -14), prevDays = periodDays(prev);
     const rnd = (S.me && S.me.rounding) || 0;
     const prevTotal = periodTotal(prevDays, S.days, rnd);
     const daysIn = dayNum(new Date()) - dayNum(start);
-    if (!S.sends[keyOf(prev)] && prevTotal > 0 && daysIn <= 7 && S.pub.payEmail)
+    const prevSent = S.sends[keyOf(prev)];
+    if (!prevSent && prevTotal > 0 && daysIn <= 7)
       out.push(h("div", { class: "msg" }, "Your last timecard (" + fmtMD(prev) + " to " + fmtMD(addDays(prev, 11)) + ", " + fmtDur(prevTotal) + ") wasn't sent. ",
-        h("button", { class: "link", type: "button", style: "padding:0", onclick: () => sendCard(prev, prevDays, rnd, prevTotal, S.days) }, "Send it now")));
+        h("button", { class: "link", type: "button", style: "padding:0", onclick: () => sendCard(prev, prevDays, rnd, prevTotal, S.days) }, "Copy its link")));
+    if (prevSent && prevSent.cardId && S.justLinked && S.justLinked.key === keyOf(prev))
+      out.push(linkBox(prevSent.cardId, "Last timecard link copied ✓ (" + fmtMD(prev) + " to " + fmtMD(addDays(prev, 11)) + ")", prevSent.sentAt));
     return out;
   }
 
@@ -784,6 +786,22 @@ const OWNER_EMAILS = ["paxakz21345@gmail.com", "paxa_kz@hotmail.com"];
 
   function cardLink(id) { return location.origin + location.pathname + "?card=" + id; }
 
+  function copyText(text) {
+    try {
+      if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).catch(() => legacyCopy(text)); return true; }
+    } catch (e) {}
+    return legacyCopy(text);
+  }
+  function legacyCopy(text) {
+    try {
+      const t = document.createElement("textarea");
+      t.value = text; t.setAttribute("readonly", ""); t.style.position = "fixed"; t.style.opacity = "0";
+      document.body.append(t); t.select(); t.setSelectionRange(0, text.length);
+      const ok = document.execCommand("copy"); t.remove(); return ok;
+    } catch (e) { return false; }
+  }
+
+  // Saves a frozen copy of the card and copies its link. The worker pastes it into any email.
   function sendCard(start, days, rnd, total, recs) {
     const frozen = {};
     days.forEach(d => {
@@ -792,24 +810,30 @@ const OWNER_EMAILS = ["paxakz21345@gmail.com", "paxa_kz@hotmail.com"];
     });
     const ref = F.doc(F.collection(db, "cards"));   // random, unguessable id
     const now = Date.now();
-    // Saved on the phone right away; uploads in the background if there's no signal.
+    const link = cardLink(ref.id);
+    copyText(link);                                   // copy first, while the tap is still "fresh"
     F.setDoc(ref, {
       uid: S.user.uid, name: S.me.name, business: S.pub.businessName || "",
       start: keyOf(start), rounding: rnd, days: frozen, totalMinutes: total, sentAt: now
-    }).catch(() => toast("Couldn't save the timecard link. Try Send again.", true));
+    }).catch(() => toast("Couldn't save the timecard copy. Tap the button again.", true));
     F.setDoc(F.doc(db, "workers", S.user.uid, "sends", keyOf(start)), { sentAt: now, totalMinutes: total, cardId: ref.id }).catch(() => {});
+    S.justLinked = { key: keyOf(start), id: ref.id, at: now };
+    if (navigator.vibrate) { try { navigator.vibrate(30); } catch (e) {} }
+    render(true);
+  }
 
-    const period = fmtMD(start) + " to " + fmtMD(addDays(start, 11));
-    const subject = "Timecard: " + S.me.name + ", " + period;
-    const body = [
-      "Hi,", "",
-      "Here's my timecard for " + period + ".",
-      "Total: " + fmtDur(total), "",
-      "View it here:", cardLink(ref.id), "",
-      "Thanks,", S.me.name
-    ].join("\n");
-    window.location.href = "mailto:" + encodeURIComponent(S.pub.payEmail) +
-      "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+  // Shows a timecard link with a Copy button.
+  function linkBox(id, title, when) {
+    const url = cardLink(id);
+    const field = h("input", { type: "text", readOnly: true, value: url, "aria-label": "Timecard link",
+      onfocus: e => { try { e.target.select(); } catch (x) {} } });
+    return h("div", { class: "card", style: "margin-top:12px" },
+      h("h3", null, title),
+      h("p", null, "Paste it into an email (Gmail, Outlook, anything) to whoever handles pay." + (when ? " Made " + fmtWhen(when) + "." : "")),
+      h("div", { class: "field", style: "margin:0 0 10px" }, field),
+      h("div", { class: "actions" },
+        h("button", { type: "button", class: "b-go", onclick: () => { copyText(url); toast("Link copied."); } }, "Copy again"),
+        h("button", { type: "button", class: "b-plain", onclick: () => window.open(url, "_blank", "noopener") }, "Preview")));
   }
 
   // ----- shared card page (opened from the emailed link, no sign-in) -----
@@ -900,8 +924,8 @@ const OWNER_EMAILS = ["paxakz21345@gmail.com", "paxa_kz@hotmail.com"];
       periodNav(start, () => ownerPeriod(true)),
       weeksView(days, recs, rnd, { uid, owner: true }),
       h("div", { class: "total" }, h("span", null, "2-week total"), h("strong", null, fmtDur(total))),
-      h("p", { class: "note" }, sent ? "Timecard sent " + fmtWhen(sent.sentAt) + ". " : "Timecard not sent yet for this period.",
-        sent && sent.cardId ? h("a", { href: cardLink(sent.cardId), target: "_blank", rel: "noopener", style: "color:var(--ink)" }, "View sent copy") : null),
+      h("p", { class: "note" }, sent ? "Timecard link made " + fmtWhen(sent.sentAt) + ". " : "No timecard link made yet for this period.",
+        sent && sent.cardId ? h("a", { href: cardLink(sent.cardId), target: "_blank", rel: "noopener", style: "color:var(--ink)" }, "View it") : null),
       h("p", { class: "note" }, "Red notes show when a time was changed from what the button stamped. Tap any time to fix it."),
       h("div", { class: "spacer" }),
       h("div", { class: "card" }, h("h3", null, "Rounding"),
@@ -926,7 +950,6 @@ const OWNER_EMAILS = ["paxakz21345@gmail.com", "paxa_kz@hotmail.com"];
     const pubRef = F.doc(db, "config", "public");
     const cur = periodStart(0), payday = addDays(cur, 11);
     const nameIn = h("input", { type: "text", id: "bn", value: D.bn !== undefined ? D.bn : (pub.businessName || ""), placeholder: "Your business name", oninput: e => { D.bn = e.target.value; } });
-    const mailIn = h("input", { type: "email", id: "pe", value: D.pe !== undefined ? D.pe : (pub.payEmail || ""), autocapitalize: "none", oninput: e => { D.pe = e.target.value; } });
     const dateIn = h("input", { type: "date", id: "ps", value: D.ps !== undefined ? D.ps : keyOf(payday),
       oninput: e => { D.ps = e.target.value; }, onchange: e => { D.ps = e.target.value; } });
     const code = S.priv && S.priv.joinCode;
@@ -965,15 +988,6 @@ const OWNER_EMAILS = ["paxakz21345@gmail.com", "paxa_kz@hotmail.com"];
             delete D.ps; S.offset = 0; ownerPeriod(true);
             toast((picked.getDay() === 5 ? "Saved." : "Saved. Moved to the Friday of that week, " + longDate(fri) + ".") + " Paydays are every other Friday from there.");
           }).catch(fail);
-        })),
-
-      h("div", { class: "card" }, h("h3", null, "Where timecards get sent"),
-        h("p", null, "When a worker taps Send, their email opens addressed to this person."),
-        h("div", { class: "field", style: "margin:0" }, mailIn),
-        saveBtn(() => {
-          const v = mailIn.value.trim();
-          if (!/^\S+@\S+\.\S+$/.test(v)) return toast("That email doesn't look right.", true);
-          F.setDoc(pubRef, { payEmail: v }, { merge: true }).then(() => { delete D.pe; toast("Saved."); }).catch(fail);
         })),
 
       h("div", { class: "card" }, h("h3", null, "Business name"),
