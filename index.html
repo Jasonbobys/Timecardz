@@ -239,7 +239,7 @@ const OWNER_EMAILS = ["paxakz21345@gmail.com", "paxa_kz@hotmail.com"];
       days: {}, sends: {},
       offset: 0, editing: null, justPunched: null,
       workers: {}, workersReady: false, wDays: {}, wSends: {},
-      tab: "team", sel: null, confirmRemove: false,
+      tab: "team", sel: null, confirmRemove: false, confirmReset: false,
       authMode: "signin", authMsg: "", authErr: false, busy: false,
       joinMsg: "", toast: "", toastErr: false, draft: {}
     };
@@ -362,7 +362,8 @@ const OWNER_EMAILS = ["paxakz21345@gmail.com", "paxa_kz@hotmail.com"];
 
   function workerPeriod() {
     stop("period");
-    const [a, b] = rangeKeys(periodStart(S.offset));
+    const cur = periodStart(0);
+    const a = keyOf(addDays(cur, -14)), b = rangeKeys(cur)[1];
     const q = F.query(F.collection(db, "workers", S.user.uid, "days"), F.where("date", ">=", a), F.where("date", "<=", b));
     add("period", F.onSnapshot(q, s => {
       const m = {}; s.forEach(d => { m[d.id] = d.data(); }); S.days = m; render();
@@ -581,6 +582,7 @@ const OWNER_EMAILS = ["paxakz21345@gmail.com", "paxa_kz@hotmail.com"];
 
   // ----- worker home -----
   function workerView() {
+    S.offset = 0;
     const now = new Date();
     const rnd = S.me.rounding || 0;
     const start = periodStart(S.offset);
@@ -597,16 +599,19 @@ const OWNER_EMAILS = ["paxakz21345@gmail.com", "paxa_kz@hotmail.com"];
       h("button", { class: "punch", id: "punch", type: "button", onclick: punch },
         h("span", { class: "big", id: "punchBig" }), h("span", { class: "sub", id: "punchSub" })),
       h("p", { class: "status", id: "status", "aria-live": "polite" }),
-      periodNav(start, () => workerPeriod()),
+      h("div", { class: "pnav", style: "justify-content:center" },
+        h("div", { class: "lbl" }, "Pay period: " + fmtMD(start) + " to " + fmtMD(addDays(start, 11)),
+          h("small", null, "Payday " + addDays(start, 11).toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" })))),
       weeksView(days, S.days, rnd, { uid: S.user.uid, owner: false }),
       h("div", { class: "total" }, h("span", null, "2-week total"), h("strong", null, fmtDur(total))),
       rnd ? h("p", { class: "note" }, "Hours are rounded to " + rnd + " minutes in your favor.") : null,
       h("div", { class: "spacer" }),
       payEmail
-        ? h("button", { class: "btn", type: "button", onclick: () => sendCard(start, days, rnd, total) },
+        ? h("button", { class: "btn", type: "button", onclick: () => sendCard(start, days, rnd, total, S.days) },
             sent ? "Send again" : "Send timecard", h("small", null, "Opens your email, ready to send to " + payEmail))
         : h("div", { class: "msg" }, "Your boss hasn't set an email for timecards yet."),
       sent ? h("p", { class: "note", style: "text-align:center;margin-top:8px" }, "Sent " + fmtWhen(sent.sentAt)) : null,
+      resetBlock(start, days, sent),
       h("p", { class: "note", style: "text-align:center;margin-top:18px" },
         "Tap any time to fix it. ",
         S.todayPending ? "No signal right now: your times are saved on this phone and will upload automatically." : "All times saved.")
@@ -614,17 +619,41 @@ const OWNER_EMAILS = ["paxakz21345@gmail.com", "paxa_kz@hotmail.com"];
   }
 
   function paydayNotes(start) {
-    if (S.offset !== 0) return null;
     const todayK = keyOf(new Date());
     const out = [];
     if (todayK === keyOf(addDays(start, 11)) && !S.sends[keyOf(start)])
       out.push(h("div", { class: "msg" }, h("b", null, "Today is payday. "), "When you clock out, tap Send timecard at the bottom."));
-    const prev = addDays(start, -14);
+    // Forgot to send last period's card? It can still be sent for a week after payday.
+    const prev = addDays(start, -14), prevDays = periodDays(prev);
+    const rnd = (S.me && S.me.rounding) || 0;
+    const prevTotal = periodTotal(prevDays, S.days, rnd);
     const daysIn = dayNum(new Date()) - dayNum(start);
-    if (!S.sends[keyOf(prev)] && daysIn >= -2 && daysIn <= 7)
-      out.push(h("div", { class: "msg" }, "Your last timecard (" + fmtMD(prev) + " to " + fmtMD(addDays(prev, 11)) + ") hasn't been sent yet. ",
-        h("button", { class: "link", type: "button", style: "padding:0", onclick: () => { S.offset = -1; S.editing = null; workerPeriod(); render(true); window.scrollTo(0, 0); } }, "Open it to send")));
+    if (!S.sends[keyOf(prev)] && prevTotal > 0 && daysIn <= 7 && S.pub.payEmail)
+      out.push(h("div", { class: "msg" }, "Your last timecard (" + fmtMD(prev) + " to " + fmtMD(addDays(prev, 11)) + ", " + fmtDur(prevTotal) + ") wasn't sent. ",
+        h("button", { class: "link", type: "button", style: "padding:0", onclick: () => sendCard(prev, prevDays, rnd, prevTotal, S.days) }, "Send it now")));
     return out;
+  }
+
+  function resetBlock(start, days, sent) {
+    if (!S.confirmReset)
+      return h("button", { class: "btn danger", type: "button", style: "margin-top:16px", onclick: () => { S.confirmReset = true; render(true); } }, "Reset timecard");
+    return h("div", { class: "card", style: "margin-top:16px" },
+      h("h3", null, "Clear all times on this card?"),
+      h("p", null, "This clears " + fmtMD(start) + " to " + fmtMD(addDays(start, 11)) + ". " +
+        (sent ? "You already sent it, so you're good to reset." : "You haven't sent this card yet, so send it first if you need it.")),
+      h("div", { class: "actions" },
+        h("button", { type: "button", class: "b-plain", onclick: () => { S.confirmReset = false; render(true); } }, "Cancel"),
+        h("button", { type: "button", class: "b-danger", onclick: () => {
+          const now = Date.now();
+          days.forEach(d => {
+            const k = keyOf(d), rec = S.days[k];
+            if (rec && (has(rec.in) || has(rec.out)))
+              F.setDoc(F.doc(db, "workers", S.user.uid, "days", k), { date: k, in: null, out: null, updatedAt: now }, { merge: true }).catch(fail);
+          });
+          if (S.today && keyOf(new Date()) >= keyOf(start)) S.today = Object.assign({}, S.today, { in: null, out: null });
+          S.confirmReset = false; S.editing = null;
+          toast("Timecard cleared.");
+        } }, "Yes, reset")));
   }
 
   function periodNav(start, onChange) {
@@ -747,7 +776,7 @@ const OWNER_EMAILS = ["paxakz21345@gmail.com", "paxa_kz@hotmail.com"];
     setTimeout(() => render(), 2600);
   }
 
-  function sendCard(start, days, rnd, total) {
+  function sendCard(start, days, rnd, total, recs) {
     const lines = [];
     lines.push("Timecard for " + S.me.name);
     lines.push("Pay period: " + fmtMD(start) + " to " + fmtMD(addDays(start, 11)));
@@ -756,7 +785,7 @@ const OWNER_EMAILS = ["paxakz21345@gmail.com", "paxa_kz@hotmail.com"];
       lines.push("WEEK " + (w + 1));
       let wk = 0;
       days.slice(w * 5, w * 5 + 5).forEach(d => {
-        const rec = S.days[keyOf(d)] || {};
+        const rec = recs[keyOf(d)] || {};
         const m = paidMin(rec, rnd);
         if (m > 0) wk += m;
         const t = (has(rec.in) ? fmtTime(rec.in) : "--") + " to " + (has(rec.out) ? fmtTime(rec.out) : "--");
