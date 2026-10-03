@@ -23,14 +23,10 @@
   padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
+  :root{
     --bg:#141920; --card:#1D242D; --ink:#E8ECE6; --muted:#98A1AC; --line:#2E3742;
     --in:#4C9F78; --out:#DD6157; --today:#3A3518; --on:#0f1318;
   }
-}
-:root[data-theme="dark"]{
-  --bg:#141920; --card:#1D242D; --ink:#E8ECE6; --muted:#98A1AC; --line:#2E3742;
-  --in:#4C9F78; --out:#DD6157; --today:#3A3518; --on:#0f1318;
 }
 *,*::before,*::after{box-sizing:inherit}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -39,404 +35,897 @@ body{
   font-family:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   font-size:16px; line-height:1.4; -webkit-tap-highlight-color:transparent;
 }
-.wrap{max-width:520px;margin:0 auto;padding:20px 16px 40px}
-.now{padding:8px 4px 18px}
+.wrap{max-width:560px;margin:0 auto;padding:16px 16px 48px}
+button{font:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+
+/* top bar */
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:4px 4px 8px}
+.biz{font-weight:800;font-stretch:112%;font-size:1.15rem;line-height:1.2}
+.who{color:var(--muted);font-size:.9rem}
+.link{background:none;border:0;color:var(--ink);font-weight:600;text-decoration:underline;padding:10px 4px}
+
+/* clock + button */
+.now{padding:6px 4px 16px}
 .date{font-size:1rem;color:var(--muted);margin:0}
-.clock{
-  margin:2px 0 0; font-weight:800; font-stretch:118%;
-  font-size:clamp(3rem,16vw,4.6rem); line-height:1; letter-spacing:-.02em;
-  font-variant-numeric:tabular-nums;
-}
+.clock{margin:2px 0 0;font-weight:800;font-stretch:118%;font-size:clamp(3rem,16vw,4.6rem);line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .clock small{font-size:.32em;font-weight:600;letter-spacing:0;margin-left:.25em;color:var(--muted)}
-.punch{
-  display:block;width:100%;border:0;border-radius:22px;padding:22px 20px;
-  font:inherit;color:var(--on);background:var(--in);cursor:pointer;text-align:left;
-  transition:transform .08s ease, filter .15s ease;
-  box-shadow:0 4px 0 color-mix(in srgb, var(--in) 60%, #000);
-}
+.punch{display:block;width:100%;border:0;border-radius:22px;padding:22px 20px;color:var(--on);background:var(--in);text-align:left;
+  transition:transform .08s ease;box-shadow:0 4px 0 color-mix(in srgb, var(--in) 60%, #000)}
 .punch.out{background:var(--out);box-shadow:0 4px 0 color-mix(in srgb, var(--out) 60%, #000)}
 .punch:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.3)}
 .punch:disabled{background:var(--line);color:var(--muted);box-shadow:none;cursor:default}
 .punch .big{display:block;font-size:1.9rem;font-weight:800;font-stretch:112%;line-height:1.1}
 .punch .sub{display:block;font-size:.95rem;opacity:.85;margin-top:4px}
-.status{margin:14px 4px 26px;color:var(--muted);font-size:.98rem;min-height:1.4em}
+.status{margin:14px 4px 22px;color:var(--muted);font-size:.98rem;min-height:1.4em}
 .status b{color:var(--ink)}
+
+/* period nav */
+.pnav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px}
+.pnav button{width:46px;height:46px;flex:none;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:1.3rem}
+.pnav button:disabled{opacity:.35}
+.pnav .lbl{text-align:center;font-weight:700}
+.pnav .lbl small{display:block;font-weight:400;color:var(--muted);font-size:.85rem}
+
+/* week tables */
 .week{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow:hidden}
-.week h2{
-  margin:0;padding:12px 14px;font-size:1rem;font-weight:700;
-  display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--line)
-}
+.week h2{margin:0;padding:12px 14px;font-size:1rem;font-weight:700;display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--line)}
 .week h2 span{font-weight:500;color:var(--muted);font-size:.9rem}
-.row{
-  display:grid;grid-template-columns:1.15fr 1fr 1fr .85fr;align-items:center;
-  padding:4px 8px 4px 14px;border-bottom:1px solid var(--line);min-height:52px;
-}
+.row{display:grid;grid-template-columns:1.1fr 1fr 1fr .85fr;align-items:center;padding:4px 8px 4px 14px;border-bottom:1px solid var(--line);min-height:52px}
 .row:last-child{border-bottom:0}
 .row.head{min-height:0;padding-top:8px;padding-bottom:6px;font-size:.8rem;color:var(--muted)}
 .row.today{background:var(--today)}
 .day{font-weight:700}
 .day small{display:block;font-weight:400;color:var(--muted);font-size:.8rem}
-.t{
-  font:inherit;font-variant-numeric:tabular-nums;background:none;border:0;color:var(--ink);
-  text-align:left;padding:10px 4px;border-radius:8px;cursor:pointer;font-size:.95rem
-}
+.tcell{display:flex;flex-direction:column;align-items:flex-start}
+.t{font-variant-numeric:tabular-nums;background:none;border:0;color:var(--ink);text-align:left;padding:10px 4px;border-radius:8px;font-size:.95rem}
 .t:hover,.t:focus-visible{background:color-mix(in srgb, var(--ink) 8%, transparent)}
 .t.empty{color:var(--muted)}
+.flag{font-size:.72rem;color:var(--out);font-weight:600;margin-top:-6px;padding:0 4px 6px;line-height:1.2}
 .hrs{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;padding-right:6px}
-.total{
-  display:flex;justify-content:space-between;align-items:baseline;
-  padding:16px 4px;border-top:2px solid var(--ink);margin-top:6px;
-}
+.warn{color:var(--out)}
+.total{display:flex;justify-content:space-between;align-items:baseline;padding:14px 4px 6px;border-top:2px solid var(--ink);margin-top:6px}
 .total strong{font-size:1.6rem;font-stretch:112%;font-variant-numeric:tabular-nums}
-.reset{
-  display:block;width:100%;margin-top:18px;padding:16px;border-radius:14px;
-  background:none;border:2px solid var(--out);color:var(--out);font:inherit;font-weight:700;cursor:pointer;
-}
-.hint{color:var(--muted);font-size:.85rem;text-align:center;margin:14px 0 0}
-button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
-/* inline editor + reset confirm */
+.note{color:var(--muted);font-size:.85rem;margin:2px 4px 0}
+
+/* inline editor */
 .editor{padding:14px;border-bottom:1px solid var(--line);background:var(--bg)}
 .editor label{display:block;font-weight:700;margin-bottom:8px}
-.editor input[type=time]{
-  width:100%;font:inherit;font-size:1.5rem;padding:10px 12px;border-radius:12px;
-  border:1px solid var(--line);background:var(--card);color:var(--ink);margin-bottom:12px
-}
+.editor input[type=time]{width:100%;font:inherit;font-size:1.5rem;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);margin-bottom:12px}
 .actions{display:flex;gap:10px}
-.actions button{flex:1;padding:14px;border-radius:12px;font:inherit;font-weight:700;border:0;cursor:pointer}
-.btn-plain{background:var(--card);color:var(--ink);border:1px solid var(--line)!important}
-.btn-go{background:var(--ink);color:var(--card)}
-.btn-danger{background:var(--out);color:#fff}
-.btn-clear{background:none;color:var(--out);border:2px solid var(--out)!important}
-.confirm{margin-top:18px;padding:16px;border-radius:14px;border:2px solid var(--out);background:var(--card)}
-.confirm p{margin:0 0 12px}
-.warn{color:var(--out);font-weight:600;font-size:.85rem}
+.actions button{flex:1;padding:14px;border-radius:12px;font-weight:700;border:0}
+.b-plain{background:var(--card);color:var(--ink);border:1px solid var(--line)!important}
+.b-go{background:var(--ink);color:var(--card)}
+.b-danger{background:var(--out);color:#fff}
+.b-clear{background:none;color:var(--out);border:2px solid var(--out)!important}
+
+/* general */
+.btn{display:block;width:100%;padding:16px;border-radius:14px;border:0;font-weight:700;background:var(--ink);color:var(--card);text-align:center}
+.btn.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.btn.danger{background:none;color:var(--out);border:2px solid var(--out)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn small{display:block;font-weight:400;opacity:.8;font-size:.85rem;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.card h3{margin:0 0 4px;font-size:1.05rem}
+.card p{margin:0 0 12px;color:var(--muted);font-size:.92rem}
+.field{margin-bottom:14px}
+.field label{display:block;font-weight:700;margin-bottom:6px}
+.field input,.field select{width:100%;font:inherit;font-size:1.05rem;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.card .field input,.card .field select{background:var(--bg)}
+.msg{padding:12px 14px;border-radius:12px;background:var(--today);margin:0 0 14px}
+.msg.err{background:color-mix(in srgb, var(--out) 20%, var(--card))}
+.muted{color:var(--muted)}
+.spacer{height:16px}
+
+/* tabs */
+.tabs{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;margin:6px 0 16px}
+.tabs button{flex:1;padding:11px;border:0;border-radius:9px;background:none;font-weight:700;color:var(--muted)}
+.tabs button.on{background:var(--ink);color:var(--card)}
+
+/* owner team list */
+.wcard{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;color:var(--ink)}
+.wname{font-weight:700;font-size:1.05rem}
+.wstat{color:var(--muted);font-size:.9rem;display:flex;align-items:center;gap:7px;margin-top:2px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--line);flex:none}
+.dot.on{background:var(--in)}
+.whrs{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.badge{display:inline-block;font-size:.75rem;font-weight:700;padding:3px 8px;border-radius:99px;background:color-mix(in srgb, var(--in) 18%, var(--card));color:var(--in);margin-top:4px}
+.summary{margin:0 4px 12px;color:var(--muted)}
+.summary b{color:var(--ink)}
+.code{font-size:2.2rem;font-weight:800;font-stretch:118%;letter-spacing:.14em;margin:2px 0 12px}
+.stack > * + *{margin-top:10px}
+.auth h1{font-size:2.4rem;font-weight:800;font-stretch:118%;margin:28px 0 2px}
+.auth .lead{color:var(--muted);margin:0 0 18px}
+.removed{display:flex;justify-content:space-between;align-items:center;padding:10px 4px;border-top:1px solid var(--line)}
 @media (prefers-reduced-motion: reduce){.punch{transition:none}}
 </style>
 </head>
 <body>
-<main class="wrap">
-  <section class="now">
-    <p class="date" id="date"></p>
-    <p class="clock" id="clock"></p>
-  </section>
-
-  <button class="punch" id="punch" type="button">
-    <span class="big" id="punchBig">Loading…</span>
-    <span class="sub" id="punchSub">Getting your saved times</span>
-  </button>
-  <p class="status" id="status" aria-live="polite"></p>
-
-  <div id="weeks"></div>
-
-  <div class="total">
-    <span>2-week total</span>
-    <strong id="grand">0h 00m</strong>
-  </div>
-
-  <div id="resetArea"></div>
-  <p class="hint">Tap any time to fix it. <span id="sync">Saved on this phone.</span></p>
-</main>
-
+<main class="wrap" id="app"><p class="muted">Loading…</p></main>
 <script>
-(function(){
-  const LS_KEY = 'timeclock-v1';
-  const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  const pad = n => String(n).padStart(2,'0');
-  const keyOf = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
-  const parseKey = k => { const [y,m,d] = k.split('-').map(Number); return new Date(y,m-1,d); };
-  const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
-  const fmtTime = iso => new Date(iso).toLocaleTimeString([], {hour:'numeric', minute:'2-digit', hour12:true});
-  const fmtShort = d => (d.getMonth()+1)+'/'+d.getDate();
-  const fmtMonthDay = d => d.toLocaleDateString([], {month:'short', day:'numeric'});
-  const fmtDur = ms => { const m = Math.max(0, Math.round(ms/60000)); return Math.floor(m/60)+'h '+pad(m%60)+'m'; };
-  const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
-  const $ = id => document.getElementById(id);
+// =====================================================================
+//  SETUP: paste your Firebase settings and the owner's email here.
+// =====================================================================
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBNAcaWyYk5rCX4ofuTYXO57-xI2_WJoKA",
+  authDomain: "timecard-2720b.firebaseapp.com",
+  projectId: "timecard-2720b",
+  storageBucket: "timecard-2720b.firebasestorage.app",
+  messagingSenderId: "252995669714",
+  appId: "1:252995669714:web:3c90918f8192798f22670b"
+};
+// Owner logins (they see everyone's timecards). Add or remove emails here AND in the database rules.
+const OWNER_EMAILS = ["paxakz21345@gmail.com", "paxa_kz@hotmail.com"];
+// =====================================================================
 
-  function mondayOf(d){
-    const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    const dow = x.getDay();
-    x.setDate(x.getDate() + (dow === 0 ? -6 : 1 - dow));
-    return x;
-  }
-  function upcomingMonday(d){
-    const base = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    const dow = d.getDay();
-    if (dow === 6) return addDays(base, 2);
-    if (dow === 0) return addDays(base, 1);
-    return mondayOf(d);
+(async function () {
+  const SDK = "https://www.gstatic.com/firebasejs/10.12.2/";
+  function loadFirebase() {
+    return Promise.all([
+      import(SDK + "firebase-app.js"),
+      import(SDK + "firebase-auth.js"),
+      import(SDK + "firebase-firestore.js")
+    ]);
   }
 
-  function blank(){ return { start:null, days:{}, updatedAt:0 }; }
-  function normalize(s){
-    if (!s || typeof s !== 'object') return blank();
-    return { start: typeof s.start === 'string' ? s.start : null,
-             days: (s.days && typeof s.days === 'object') ? JSON.parse(JSON.stringify(s.days)) : {},
-             updatedAt: Number(s.updatedAt) || 0 };
-  }
+  const $app = document.getElementById("app");
+  const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const pad = n => String(n).padStart(2, "0");
+  const keyOf = d => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  const parseKey = k => { const [y, m, d] = k.split("-").map(Number); return new Date(y, m - 1, d); };
+  const addDays = (d, n) => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() + n); return x; };
+  const dayNum = d => Math.round(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5);
+  const mondayOf = d => { const dow = d.getDay(); return addDays(d, dow === 0 ? -6 : 1 - dow); };
+  const fmtTime = ms => new Date(ms).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true });
+  const fmtShort = d => (d.getMonth() + 1) + "/" + d.getDate();
+  const fmtMD = d => d.toLocaleDateString([], { month: "short", day: "numeric" });
+  const fmtWhen = ms => new Date(ms).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  const fmtDur = min => Math.floor(min / 60) + "h " + pad(min % 60) + "m";
+  const has = v => v !== undefined && v !== null;
+  const isWeekend = d => d.getDay() === 0 || d.getDay() === 6;
 
-  let editing = null;          // { k, which, value }
-  let confirmingReset = false;
-  let lastKey = '';
-  let state = blank();
-  try { const raw = localStorage.getItem(LS_KEY); if (raw) state = normalize(JSON.parse(raw)); } catch(e){}
-
-  // ---------- saving: phone first, account in the background ----------
-  // Stamping never waits on the internet. The phone copy saves instantly;
-  // the account copy catches up on its own.
-  let docRef = null, pushing = false, pushAgain = false;
-  const syncEl = $('sync');
-  function saveLocal(){ try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e){} }
-  async function pushRemote(){
-    if (!docRef) return;
-    if (pushing) { pushAgain = true; return; }
-    pushing = true;
-    try {
-      await withTimeout(docRef.set({ start: state.start, days: state.days, updatedAt: state.updatedAt }), 8000);
-      syncEl.textContent = 'Saved to your account.';
-    } catch(e) {
-      syncEl.textContent = 'Saved on this phone.';
+  // tiny element builder
+  function h(tag, props, ...kids) {
+    const el = document.createElement(tag);
+    if (props) for (const [k, v] of Object.entries(props)) {
+      if (v === undefined || v === null || v === false) continue;
+      if (k === "class") el.className = v;
+      else if (k === "for") el.htmlFor = v;
+      else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+      else if (k in el) { try { el[k] = v; } catch (e) { el.setAttribute(k, v); } }
+      else el.setAttribute(k, v);
     }
-    pushing = false;
-    if (pushAgain) { pushAgain = false; pushRemote(); }
-  }
-  function save(){ state.updatedAt = Date.now(); saveLocal(); pushRemote(); }
-
-  async function pullRemote(){
-    if (!docRef) return false;
-    const snap = await withTimeout(docRef.get(), 4000);
-    if (snap.exists) {
-      const remote = normalize(snap.data());
-      if (remote.updatedAt > state.updatedAt) { state = remote; saveLocal(); return true; }
-      if (state.updatedAt > remote.updatedAt) pushRemote();
-    } else if (state.updatedAt) {
-      pushRemote();
+    for (const c of kids.flat(Infinity)) {
+      if (c === undefined || c === null || c === false) continue;
+      el.append(c.nodeType ? c : String(c));
     }
-    return false;
+    return el;
   }
 
-  let ready = false;
-  function markReady(){ if (!ready) { ready = true; render(); } }
-  setTimeout(markReady, 4000);
+  // ---------- not set up yet ----------
+  if (FIREBASE_CONFIG.apiKey.startsWith("PASTE") || !OWNER_EMAILS.length) {
+    $app.replaceChildren(h("div", { class: "auth" },
+      h("h1", null, "Time Clock"),
+      h("p", { class: "lead" }, "This app isn't connected to its database yet."),
+      h("div", { class: "msg" }, "Paste your Firebase settings and the owner's email into the top of index.html, then reload.")));
+    return;
+  }
 
-  (async function connect(){
-    try {
-      if (!window.claude || !window.claude.use) return markReady();
-      const [db, user] = await withTimeout(Promise.all([window.claude.use('db'), window.claude.use('user')]), 4000);
-      if (!db || !user) return markReady();
-      const id = await withTimeout(user.id(), 3000);
-      if (!id) return markReady();
-      docRef = db.doc('data/users/' + id + '/timecard');
-      await pullRemote();
-      syncEl.textContent = 'Saved to your account.';
-    } catch(e) {}
-    markReady();
-    render();
-  })();
+  let A, U, F;
+  try { [A, U, F] = await loadFirebase(); }
+  catch (e) {
+    $app.replaceChildren(h("div", { class: "auth" }, h("h1", null, "Time Clock"),
+      h("div", { class: "msg err" }, "Couldn't load the app. Check your internet connection and reload.")));
+    return;
+  }
 
-  document.addEventListener('visibilitychange', async () => {
-    if (document.visibilityState !== 'visible') return;
-    try { if (await pullRemote()) render(); } catch(e){}
-    tick();
-  });
+  const fbApp = A.initializeApp(FIREBASE_CONFIG);
+  const auth = U.getAuth(fbApp);
+  let db;
+  try {
+    db = F.initializeFirestore(fbApp, { localCache: F.persistentLocalCache({ tabManager: F.persistentMultipleTabManager() }) });
+  } catch (e) { db = F.getFirestore(fbApp); }
+  const OWNERS = OWNER_EMAILS.map(e => e.trim().toLowerCase());
+  const isOwnerEmail = e => OWNERS.includes((e || "").trim().toLowerCase());
 
-  // ---------- period ----------
-  function periodStart(now){ return state.start ? parseKey(state.start) : upcomingMonday(now); }
-  function periodDays(now){
-    const s = periodStart(now), out = [];
-    for (let w = 0; w < 2; w++) for (let i = 0; i < 5; i++) out.push(addDays(s, w*7+i));
+  // ---------- state ----------
+  let S;
+  function freshState() {
+    return {
+      user: null, authReady: false, isOwner: false,
+      pub: null, pubReady: false, priv: null,
+      me: null, meReady: false,
+      today: {}, todayReady: false, todayPending: false, todayKey: keyOf(new Date()),
+      days: {}, sends: {},
+      offset: 0, editing: null, justPunched: null,
+      workers: {}, workersReady: false, wDays: {}, wSends: {},
+      tab: "team", sel: null, confirmRemove: false,
+      authMode: "signin", authMsg: "", authErr: false, busy: false,
+      joinMsg: "", toast: "", toastErr: false
+    };
+  }
+  S = freshState();
+
+  let lastJoinErr = null;
+  const subs = {};
+  function stop(group) { (subs[group] || []).forEach(u => { try { u(); } catch (e) {} }); subs[group] = []; }
+  function stopAll() { Object.keys(subs).forEach(stop); }
+  function add(group, unsub) { (subs[group] = subs[group] || []).push(unsub); }
+
+  let toastTimer;
+  function toast(text, isErr) {
+    S.toast = text; S.toastErr = !!isErr; render(true);
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => { S.toast = ""; render(); }, 5000);
+  }
+  function fail(err) {
+    const offline = err && (err.code === "unavailable");
+    toast(offline ? "No signal. It will save when you're back online." : "Couldn't save that. Try again.", true);
+  }
+
+  // ---------- pay periods ----------
+  function anchor() { const k = S.pub && S.pub.periodStart; return k ? parseKey(k) : mondayOf(new Date()); }
+  function periodStart(offset) {
+    const a = anchor();
+    const idx = Math.floor((dayNum(new Date()) - dayNum(a)) / 14) + offset;
+    return addDays(a, idx * 14);
+  }
+  function periodDays(start) {
+    const out = [];
+    for (let w = 0; w < 2; w++) for (let i = 0; i < 5; i++) out.push(addDays(start, w * 7 + i));
     return out;
   }
-  function todayStatus(now){
-    const dow = now.getDay();
-    if (dow === 0 || dow === 6) return 'weekend';
-    if (state.start){
-      const end = addDays(parseKey(state.start), 11);
-      end.setHours(23,59,59,999);
-      if (now > end) return 'full';
+  function rangeKeys(start) {
+    const s = keyOf(start), e = keyOf(addDays(start, 11)), t = keyOf(new Date());
+    return [t < s ? t : s, t > e ? t : e];
+  }
+
+  // Paid minutes for a day. Rounding (if set) rounds clock-in down and clock-out up.
+  function paidMin(rec, rnd) {
+    if (!rec || !has(rec.in) || !has(rec.out)) return null;
+    let a = rec.in, b = rec.out;
+    if (b < a) return -1;
+    const s = (rnd > 0 ? rnd : 1) * 60000;
+    a = Math.floor(a / s) * s;
+    b = rnd > 0 ? Math.ceil(b / s) * s : Math.floor(b / s) * s;
+    return Math.round((b - a) / 60000);
+  }
+  function periodTotal(days, recs, rnd) {
+    let t = 0;
+    days.forEach(d => { const m = paidMin(recs[keyOf(d)], rnd); if (m > 0) t += m; });
+    return t;
+  }
+
+  // ---------- auth ----------
+  U.onAuthStateChanged(auth, user => {
+    stopAll();
+    const keep = user && S.user && S.user.uid === user.uid;
+    const mode = user ? S.authMode : "signin", joinMsg = keep ? S.joinMsg : "";
+    S = freshState();
+    S.authMode = mode; S.joinMsg = joinMsg;
+    S.user = user; S.authReady = true;
+    if (user && lastJoinErr && lastJoinErr.uid === user.uid) { S.joinMsg = lastJoinErr.msg; lastJoinErr = null; }
+    if (user) {
+      S.isOwner = isOwnerEmail(user.email);
+      if (S.isOwner && !user.emailVerified) S.needVerify = true;
+      else if (S.isOwner) startOwner(); else startWorker();
     }
-    return 'ok';
-  }
-
-  // ---------- screen ----------
-
-  function tick(){
-    const now = new Date();
-    $('date').textContent = now.toLocaleDateString([], {weekday:'long', month:'long', day:'numeric'});
-    const t = now.toLocaleTimeString([], {hour:'numeric', minute:'2-digit', hour12:true});
-    const parts = t.split(/\s+/);
-    const c = $('clock');
-    c.textContent = parts[0];
-    if (parts[1]) { const s = document.createElement('small'); s.textContent = parts[1]; c.append(s); }
-    const k = keyOf(now);
-    if (k !== lastKey) { lastKey = k; render(); } else renderButton(now);
-  }
-
-  function renderButton(now){
-    const btn = $('punch'), big = $('punchBig'), sub = $('punchSub'), st = $('status');
-    btn.classList.remove('out');
-    btn.disabled = false;
-    if (!ready) {
-      btn.disabled = true; big.textContent = 'Loading…'; sub.textContent = 'Getting your saved times';
-      st.textContent = ''; return;
-    }
-    const status = todayStatus(now);
-    const rec = state.days[keyOf(now)] || {};
-    st.textContent = '';
-    if (status === 'weekend') {
-      btn.disabled = true; big.textContent = 'Weekend'; sub.textContent = 'Clocking works Monday to Friday';
-    } else if (status === 'full') {
-      btn.disabled = true; big.textContent = 'Timecard full'; sub.textContent = 'Press Reset to start a new 2 weeks';
-      st.textContent = 'Your 2 weeks are done.';
-    } else if (!rec.in) {
-      big.textContent = 'Clock in'; sub.textContent = 'Stamps ' + fmtTime(now) + ' for today';
-      st.textContent = 'Not clocked in yet today.';
-    } else if (!rec.out) {
-      btn.classList.add('out');
-      big.textContent = 'Clock out'; sub.textContent = 'Stamps ' + fmtTime(now) + ' for today';
-      st.append('On the clock since ');
-      const b = document.createElement('b'); b.textContent = fmtTime(rec.in); st.append(b);
-      st.append(' (' + fmtDur(now - new Date(rec.in)) + ' so far)');
-    } else {
-      btn.disabled = true; big.textContent = 'Done for today'; sub.textContent = 'Tap a time below to fix it';
-      st.append('You worked ');
-      const b = document.createElement('b'); b.textContent = fmtDur(new Date(rec.out) - new Date(rec.in)); st.append(b);
-      st.append(' today.');
-    }
-  }
-
-  function mk(label, cls, fn){
-    const b = document.createElement('button'); b.type = 'button'; b.className = cls; b.textContent = label;
-    b.addEventListener('click', fn); return b;
-  }
-
-  function render(){
-    const now = new Date();
-    const days = periodDays(now);
-    const todayK = keyOf(now);
-    const wrap = $('weeks');
-    wrap.innerHTML = '';
-    let grand = 0;
-    for (let w = 0; w < 2; w++){
-      const slice = days.slice(w*5, w*5+5);
-      let weekMs = 0;
-      const sec = document.createElement('section'); sec.className = 'week';
-      const h = document.createElement('h2'); h.textContent = 'Week ' + (w+1);
-      const range = document.createElement('span'); h.append(range); sec.append(h);
-      const head = document.createElement('div'); head.className = 'row head';
-      ['Day','In','Out','Hours'].forEach((txt,i) => { const c = document.createElement('div'); c.textContent = txt; if (i===3) c.style.textAlign='right'; head.append(c); });
-      sec.append(head);
-
-      slice.forEach(d => {
-        const k = keyOf(d), rec = state.days[k] || {};
-        const row = document.createElement('div');
-        row.className = 'row' + (k === todayK ? ' today' : '');
-        const day = document.createElement('div'); day.className = 'day'; day.textContent = DAYS[d.getDay()];
-        const sm = document.createElement('small'); sm.textContent = fmtShort(d); day.append(sm);
-        row.append(day, timeBtn(k, 'in', rec.in, d), timeBtn(k, 'out', rec.out, d));
-        const hrs = document.createElement('div'); hrs.className = 'hrs';
-        if (rec.in && rec.out){
-          const ms = new Date(rec.out) - new Date(rec.in);
-          if (ms < 0) { hrs.className = 'hrs warn'; hrs.textContent = 'Check'; }
-          else { weekMs += ms; hrs.textContent = fmtDur(ms); }
-        }
-        row.append(hrs);
-        sec.append(row);
-        if (editing && editing.k === k) sec.append(editorFor(k, d, rec));
-      });
-      range.textContent = fmtMonthDay(slice[0]) + ' to ' + fmtMonthDay(slice[4]) + ', ' + fmtDur(weekMs);
-      grand += weekMs;
-      wrap.append(sec);
-    }
-    $('grand').textContent = fmtDur(grand);
-    renderReset();
-    renderButton(now);
-  }
-
-  function timeBtn(k, which, iso, d){
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 't' + (iso ? '' : ' empty');
-    b.textContent = iso ? fmtTime(iso) : '—';
-    b.setAttribute('aria-label', (which === 'in' ? 'Clock-in time for ' : 'Clock-out time for ') + d.toDateString());
-    b.addEventListener('click', () => {
-      const base = iso ? new Date(iso) : new Date();
-      editing = { k, which, value: pad(base.getHours()) + ':' + pad(base.getMinutes()) };
-      render();
-      const inp = document.getElementById('editTime');
-      if (inp && inp.scrollIntoView) { try { inp.scrollIntoView({block:'center', behavior:'smooth'}); } catch(e){} }
-    });
-    return b;
-  }
-
-  function editorFor(k, d, rec){
-    const box = document.createElement('div'); box.className = 'editor';
-    const which = editing.which;
-    const lab = document.createElement('label'); lab.htmlFor = 'editTime';
-    lab.textContent = (which === 'in' ? 'Clock-in' : 'Clock-out') + ' time for ' + DAYS[d.getDay()] + ' ' + fmtShort(d);
-    const input = document.createElement('input');
-    input.type = 'time'; input.id = 'editTime'; input.value = editing.value;
-    input.addEventListener('input', () => { editing.value = input.value; });
-    input.addEventListener('change', () => { editing.value = input.value; });
-    const actions = document.createElement('div'); actions.className = 'actions';
-    actions.append(mk('Cancel', 'btn-plain', () => { editing = null; render(); }));
-    if (rec[which]) actions.append(mk('Clear', 'btn-clear', () => {
-      const r = state.days[k] || {};
-      delete r[which];
-      if (!r.in && !r.out) delete state.days[k]; else state.days[k] = r;
-      editing = null; save(); render();
-    }));
-    actions.append(mk('Save', 'btn-go', () => {
-      const v = input.value || editing.value;
-      if (!v) return;
-      const [hh, mm] = v.split(':').map(Number);
-      const dt = parseKey(k); dt.setHours(hh, mm, 0, 0);
-      if (!state.start) state.start = keyOf(mondayOf(parseKey(k)));
-      const r = state.days[k] || {};
-      r[which] = dt.toISOString();
-      state.days[k] = r;
-      editing = null; save(); render();
-    }));
-    box.append(lab, input, actions);
-    return box;
-  }
-
-  function renderReset(){
-    const area = $('resetArea');
-    area.innerHTML = '';
-    if (!confirmingReset) {
-      area.append(mk('Reset timecard', 'reset', () => { confirmingReset = true; renderReset(); }));
-      return;
-    }
-    const box = document.createElement('div'); box.className = 'confirm';
-    const p = document.createElement('p'); p.textContent = 'Clear every time on the card? Your next clock-in starts a new 2 weeks.';
-    const actions = document.createElement('div'); actions.className = 'actions';
-    actions.append(
-      mk('Cancel', 'btn-plain', () => { confirmingReset = false; renderReset(); }),
-      mk('Yes, reset', 'btn-danger', () => { state = blank(); editing = null; confirmingReset = false; save(); render(); })
-    );
-    box.append(p, actions);
-    area.append(box);
-  }
-
-  // ---------- the button ----------
-  $('punch').addEventListener('click', () => {
-    if (!ready) return;
-    const now = new Date();
-    if (todayStatus(now) !== 'ok') return;
-    const k = keyOf(now);
-    const rec = state.days[k] || {};
-    if (!rec.in) rec.in = now.toISOString();       // clock in
-    else if (!rec.out) rec.out = now.toISOString(); // clock out (never overwrites a clock-in)
-    else return;
-    if (!state.start) state.start = keyOf(mondayOf(now));
-    state.days[k] = rec;
-    save();
-    if (navigator.vibrate) { try { navigator.vibrate(30); } catch(e){} }
-    render();
+    render(true);
   });
 
-  tick();
-  setInterval(tick, 1000);
+  function authError(e) {
+    const c = (e && e.code) || "";
+    if (c.includes("invalid-credential") || c.includes("wrong-password") || c.includes("user-not-found")) return "Wrong email or password.";
+    if (c.includes("email-already-in-use")) return "That email already has an account. Try signing in.";
+    if (c.includes("weak-password")) return "Password needs at least 6 characters.";
+    if (c.includes("invalid-email")) return "That email doesn't look right.";
+    if (c.includes("too-many-requests")) return "Too many tries. Wait a few minutes and try again.";
+    if (c.includes("network")) return "No internet connection.";
+    return "Something went wrong. Try again.";
+  }
+
+  async function joinTeam(uid, name, email, code) {
+    await F.setDoc(F.doc(db, "workers", uid), {
+      name: name.trim().slice(0, 60), email: (email || "").toLowerCase(),
+      joinCode: code.trim().toUpperCase(), createdAt: Date.now()
+    });
+  }
+
+  // ---------- worker data ----------
+  function startWorker() {
+    const uid = S.user.uid;
+    add("base", F.onSnapshot(F.doc(db, "config", "public"), s => {
+      const before = S.pub && S.pub.periodStart;
+      S.pub = s.exists() ? s.data() : {}; S.pubReady = true;
+      if (S.me && before !== S.pub.periodStart) workerPeriod();
+      render();
+    }, () => { S.pub = S.pub || {}; S.pubReady = true; render(); }));
+
+    add("base", F.onSnapshot(F.doc(db, "workers", uid), s => {
+      const was = !!(S.me && S.me.active !== false);
+      S.me = s.exists() ? s.data() : null; S.meReady = true;
+      const now = !!(S.me && S.me.active !== false);
+      if (now && !was) { workerToday(); workerPeriod(); workerSends(); }
+      if (!now && was) { stop("today"); stop("period"); stop("sends"); }
+      render();
+    }, () => { S.meReady = true; render(); }));
+  }
+
+  function workerToday() {
+    stop("today");
+    S.todayKey = keyOf(new Date()); S.todayReady = false; S.today = {};
+    add("today", F.onSnapshot(F.doc(db, "workers", S.user.uid, "days", S.todayKey), { includeMetadataChanges: true }, s => {
+      S.today = s.exists() ? s.data() : {}; S.todayReady = true;
+      S.todayPending = s.metadata.hasPendingWrites;
+      render();
+    }, () => { S.todayReady = true; render(); }));
+  }
+
+  function workerPeriod() {
+    stop("period");
+    const [a, b] = rangeKeys(periodStart(S.offset));
+    const q = F.query(F.collection(db, "workers", S.user.uid, "days"), F.where("date", ">=", a), F.where("date", "<=", b));
+    add("period", F.onSnapshot(q, s => {
+      const m = {}; s.forEach(d => { m[d.id] = d.data(); }); S.days = m; render();
+    }, () => {}));
+  }
+
+  function workerSends() {
+    stop("sends");
+    add("sends", F.onSnapshot(F.collection(db, "workers", S.user.uid, "sends"), s => {
+      const m = {}; s.forEach(d => { m[d.id] = d.data(); }); S.sends = m; render();
+    }, () => {}));
+  }
+
+  // ---------- owner data ----------
+  function genCode() {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let c = ""; const r = new Uint32Array(6); crypto.getRandomValues(r);
+    for (let i = 0; i < 6; i++) c += chars[r[i] % chars.length];
+    return c;
+  }
+
+  let ownerSubsKey = "";
+  function startOwner() {
+    add("base", F.onSnapshot(F.doc(db, "config", "public"), s => {
+      if (!s.exists()) {
+        F.setDoc(F.doc(db, "config", "public"), {
+          businessName: "", payEmail: (S.user.email || "").toLowerCase(), periodStart: keyOf(mondayOf(new Date()))
+        }).catch(fail);
+        return;
+      }
+      S.pub = s.data(); S.pubReady = true; ownerPeriod(); render();
+    }, err => { S.pubReady = true; S.pub = {}; toast("Can't reach the database. Check the setup steps (rules).", true); }));
+
+    add("base", F.onSnapshot(F.doc(db, "config", "private"), s => {
+      if (!s.exists()) { F.setDoc(F.doc(db, "config", "private"), { joinCode: genCode() }).catch(fail); return; }
+      S.priv = s.data(); render();
+    }, () => {}));
+
+    add("base", F.onSnapshot(F.collection(db, "workers"), s => {
+      const m = {}; s.forEach(d => { m[d.id] = d.data(); });
+      S.workers = m; S.workersReady = true; ownerPeriod(); render();
+    }, () => { S.workersReady = true; render(); }));
+  }
+
+  function ownerPeriod(force) {
+    if (!S.pubReady) return;
+    const uids = Object.keys(S.workers).sort();
+    const [a, b] = rangeKeys(periodStart(S.offset));
+    const key = uids.join(",") + "|" + a + "|" + b;
+    if (!force && key === ownerSubsKey) return;
+    ownerSubsKey = key;
+    stop("period");
+    S.wDays = {}; S.wSends = {};
+    uids.forEach(uid => {
+      const q = F.query(F.collection(db, "workers", uid, "days"), F.where("date", ">=", a), F.where("date", "<=", b));
+      add("period", F.onSnapshot(q, s => {
+        const m = {}; s.forEach(d => { m[d.id] = d.data(); }); S.wDays[uid] = m; render();
+      }, () => {}));
+      add("period", F.onSnapshot(F.collection(db, "workers", uid, "sends"), s => {
+        const m = {}; s.forEach(d => { m[d.id] = d.data(); }); S.wSends[uid] = m; render();
+      }, () => {}));
+    });
+  }
+
+  // ---------- rendering ----------
+  let pendingRender = false;
+  function typing() {
+    const ae = document.activeElement;
+    return ae && $app.contains(ae) && /^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName);
+  }
+  function render(force) {
+    if (!force && typing()) { pendingRender = true; updateLive(); return; }
+    pendingRender = false;
+    const y = window.scrollY;
+    $app.replaceChildren(...[].concat(view()).flat(Infinity).filter(Boolean));
+    updateLive();
+    window.scrollTo(0, y);
+  }
+  document.addEventListener("focusout", () => setTimeout(() => { if (pendingRender && !typing()) render(true); }, 50));
+
+  function view() {
+    if (!S.authReady) return h("p", { class: "muted" }, "Loading…");
+    if (!S.user) return authView();
+    if (S.isOwner && S.needVerify) return verifyView();
+    if (S.isOwner) return ownerView();
+    if (!S.meReady || !S.pubReady) return [topbar("Time Clock"), h("p", { class: "muted" }, "Loading your timecard…")];
+    if (!S.me) return pendingView();
+    if (S.me.active === false) return removedView();
+    return workerView();
+  }
+
+  function toastEl() { return S.toast ? h("div", { class: "msg" + (S.toastErr ? " err" : "") }, S.toast) : null; }
+
+  function topbar(title, sub) {
+    return h("header", { class: "top" },
+      h("div", null, h("div", { class: "biz" }, title), sub ? h("div", { class: "who" }, sub) : null),
+      h("button", { class: "link", type: "button", onclick: () => U.signOut(auth) }, "Sign out"));
+  }
+
+  // ----- sign in / create account -----
+  function authView() {
+    const signup = S.authMode === "signup";
+    const f = {};
+    const field = (id, label, type, ac, note) => h("div", { class: "field" },
+      h("label", { for: id }, label),
+      f[id] = h("input", { type, id, autocomplete: ac, autocapitalize: type === "text" ? "words" : "none", spellcheck: false }),
+      note ? h("div", { class: "note" }, note) : null);
+
+    const form = h("form", { onsubmit: async e => {
+      e.preventDefault();
+      const email = f.email.value.trim(), pw = f.pw.value;
+      if (!email || !pw) { S.authMsg = "Enter your email and password."; S.authErr = true; return render(true); }
+      S.busy = true; S.authMsg = ""; render(true);
+      try {
+        if (!signup) await U.signInWithEmailAndPassword(auth, email, pw);
+        else {
+          const name = f.name.value.trim(), code = f.code.value.trim();
+          const owner = isOwnerEmail(email);
+          if (!name) throw { code: "x-name" };
+          if (!owner && !code) throw { code: "x-code" };
+          const cred = await U.createUserWithEmailAndPassword(auth, email, pw);
+          try { await U.updateProfile(cred.user, { displayName: name }); } catch (e2) {}
+          if (owner) { try { await U.sendEmailVerification(cred.user); } catch (e4) {} }
+          if (!owner) {
+            try { await joinTeam(cred.user.uid, name, email, code); }
+            catch (e3) { lastJoinErr = { uid: cred.user.uid, msg: "That team code didn't work. Check it with your boss and try again." }; S.joinMsg = lastJoinErr.msg; render(true); }
+          }
+        }
+      } catch (err) {
+        S.authErr = true;
+        S.authMsg = err.code === "x-name" ? "Enter your name." : err.code === "x-code" ? "Enter the team code from your boss." : authError(err);
+      }
+      S.busy = false; render(true);
+    } },
+      signup ? field("name", "Your name", "text", "name") : null,
+      field("email", "Email", "email", "email"),
+      field("pw", "Password", "password", signup ? "new-password" : "current-password", signup ? "At least 6 characters." : null),
+      signup ? field("code", "Team code", "text", "off", "Get this from your boss. The owner leaves it blank.") : null,
+      S.authMsg ? h("div", { class: "msg" + (S.authErr ? " err" : "") }, S.authMsg) : null,
+      h("button", { class: "btn", type: "submit", disabled: S.busy }, S.busy ? "One moment…" : signup ? "Create account" : "Sign in"),
+      !signup ? h("button", { class: "link", type: "button", style: "display:block;margin:10px auto 0", onclick: async () => {
+        const email = f.email.value.trim();
+        if (!email) { S.authMsg = "Type your email above first, then tap Forgot password."; S.authErr = true; return render(true); }
+        try { await U.sendPasswordResetEmail(auth, email); S.authMsg = "Check your email for a link to reset your password."; S.authErr = false; }
+        catch (err) { S.authMsg = authError(err); S.authErr = true; }
+        render(true);
+      } }, "Forgot password?") : null);
+
+    return h("div", { class: "auth" },
+      h("h1", null, "Time Clock"),
+      h("p", { class: "lead" }, signup ? "Create your account to start clocking in." : "Sign in to clock in and out."),
+      h("div", { class: "tabs" },
+        h("button", { type: "button", class: signup ? "" : "on", onclick: () => { S.authMode = "signin"; S.authMsg = ""; render(true); } }, "Sign in"),
+        h("button", { type: "button", class: signup ? "on" : "", onclick: () => { S.authMode = "signup"; S.authMsg = ""; render(true); } }, "Create account")),
+      form);
+  }
+
+  function pendingView() {
+    const nameIn = h("input", { type: "text", id: "jn", autocomplete: "name", value: S.user.displayName || "" });
+    const codeIn = h("input", { type: "text", id: "jc", autocomplete: "off", autocapitalize: "characters", spellcheck: false });
+    return [topbar("Time Clock", S.user.email),
+      h("div", { class: "card" },
+        h("h3", null, "Join your team"),
+        h("p", null, "Enter the team code from your boss to get your timecard."),
+        h("div", { class: "field" }, h("label", { for: "jn" }, "Your name"), nameIn),
+        h("div", { class: "field" }, h("label", { for: "jc" }, "Team code"), codeIn),
+        S.joinMsg ? h("div", { class: "msg err" }, S.joinMsg) : null,
+        h("button", { class: "btn", type: "button", disabled: S.busy, onclick: async () => {
+          if (!nameIn.value.trim() || !codeIn.value.trim()) { S.joinMsg = "Enter your name and the team code."; return render(true); }
+          S.busy = true; S.joinMsg = ""; render(true);
+          try { await joinTeam(S.user.uid, nameIn.value, S.user.email, codeIn.value); }
+          catch (e) { S.joinMsg = e && e.code === "unavailable" ? "No internet connection." : "That team code didn't work. Check it with your boss and try again."; }
+          S.busy = false; render(true);
+        } }, "Join team"))];
+  }
+
+  function verifyView() {
+    return [topbar("Time Clock", S.user.email),
+      h("div", { class: "card" },
+        h("h3", null, "Confirm your email to open the owner console"),
+        h("p", null, "We sent a link to " + S.user.email + ". Open that email and click the link (check Junk or Spam if you don't see it), then come back and tap Continue."),
+        S.joinMsg ? h("div", { class: "msg" }, S.joinMsg) : null,
+        h("div", { class: "stack" },
+          h("button", { class: "btn", type: "button", disabled: S.busy, onclick: async () => {
+            S.busy = true; render(true);
+            try {
+              await S.user.reload();
+              if (auth.currentUser && auth.currentUser.emailVerified) {
+                await auth.currentUser.getIdToken(true);
+                S.needVerify = false; S.joinMsg = ""; S.busy = false;
+                startOwner(); render(true); return;
+              }
+              S.joinMsg = "Not confirmed yet. Click the link in the email first.";
+            } catch (e) { S.joinMsg = "Couldn't check. Make sure you're online and try again."; }
+            S.busy = false; render(true);
+          } }, S.busy ? "Checking…" : "Continue"),
+          h("button", { class: "btn ghost", type: "button", onclick: async () => {
+            try { await U.sendEmailVerification(S.user); S.joinMsg = "Sent a new link. Check your email."; }
+            catch (e) { S.joinMsg = "Wait a minute before sending another link."; }
+            render(true);
+          } }, "Send the link again")))];
+  }
+
+  function removedView() {
+    return [topbar(S.pub.businessName || "Time Clock", S.me.name),
+      h("div", { class: "card" }, h("h3", null, "You're not on this team right now"),
+        h("p", null, "Your boss removed this account from the time clock. Talk to them if that's a mistake."))];
+  }
+
+  // ----- worker home -----
+  function workerView() {
+    const now = new Date();
+    const rnd = S.me.rounding || 0;
+    const start = periodStart(S.offset);
+    const days = periodDays(start);
+    const total = periodTotal(days, S.days, rnd);
+    const sent = S.sends[keyOf(start)];
+    const payEmail = S.pub.payEmail;
+
+    return [
+      topbar(S.pub.businessName || "Time Clock", "Hi, " + S.me.name),
+      toastEl(),
+      h("section", { class: "now" }, h("p", { class: "date", id: "date" }), h("p", { class: "clock", id: "clock" })),
+      h("button", { class: "punch", id: "punch", type: "button", onclick: punch },
+        h("span", { class: "big", id: "punchBig" }), h("span", { class: "sub", id: "punchSub" })),
+      h("p", { class: "status", id: "status", "aria-live": "polite" }),
+      periodNav(start, () => workerPeriod()),
+      weeksView(days, S.days, rnd, { uid: S.user.uid, owner: false }),
+      h("div", { class: "total" }, h("span", null, "2-week total"), h("strong", null, fmtDur(total))),
+      rnd ? h("p", { class: "note" }, "Hours are rounded to " + rnd + " minutes in your favor.") : null,
+      h("div", { class: "spacer" }),
+      payEmail
+        ? h("button", { class: "btn", type: "button", onclick: () => sendCard(start, days, rnd, total) },
+            sent ? "Send again" : "Send timecard", h("small", null, "Opens your email, ready to send to " + payEmail))
+        : h("div", { class: "msg" }, "Your boss hasn't set an email for timecards yet."),
+      sent ? h("p", { class: "note", style: "text-align:center;margin-top:8px" }, "Sent " + fmtWhen(sent.sentAt)) : null,
+      h("p", { class: "note", style: "text-align:center;margin-top:18px" },
+        "Tap any time to fix it. ",
+        S.todayPending ? "No signal right now: your times are saved on this phone and will upload automatically." : "All times saved.")
+    ];
+  }
+
+  function periodNav(start, onChange) {
+    const end = addDays(start, 11);
+    const label = S.offset === 0 ? "This pay period" : S.offset === -1 ? "Last pay period" : S.offset === 1 ? "Next pay period" : "Pay period";
+    const go = d => { S.offset += d; S.editing = null; onChange(); render(true); };
+    return h("div", { class: "pnav" },
+      h("button", { type: "button", "aria-label": "Previous pay period", onclick: () => go(-1) }, "‹"),
+      h("div", { class: "lbl" }, label, h("small", null, fmtMD(start) + " to " + fmtMD(end))),
+      h("button", { type: "button", "aria-label": "Next pay period", disabled: S.offset >= 0, onclick: () => go(1) }, "›"));
+  }
+
+  function weeksView(days, recs, rnd, ctx) {
+    const todayK = keyOf(new Date());
+    const out = [];
+    for (let w = 0; w < 2; w++) {
+      const slice = days.slice(w * 5, w * 5 + 5);
+      let weekMin = 0;
+      const rows = [];
+      slice.forEach(d => {
+        const k = keyOf(d), rec = recs[k] || {};
+        const m = paidMin(rec, rnd);
+        if (m > 0) weekMin += m;
+        rows.push(h("div", { class: "row" + (k === todayK ? " today" : "") },
+          h("div", { class: "day" }, DAYS[d.getDay()], h("small", null, fmtShort(d))),
+          timeCell(ctx, k, "in", rec, d), timeCell(ctx, k, "out", rec, d),
+          h("div", { class: "hrs" + (m === -1 ? " warn" : "") }, m === null ? "" : m === -1 ? "Check" : fmtDur(m))));
+        if (S.editing && S.editing.uid === ctx.uid && S.editing.k === k) rows.push(editorView(ctx, k, rec, d));
+      });
+      out.push(h("section", { class: "week" },
+        h("h2", null, "Week " + (w + 1), h("span", null, fmtMD(slice[0]) + " to " + fmtMD(slice[4]) + ", " + fmtDur(weekMin))),
+        h("div", { class: "row head" }, h("div", null, "Day"), h("div", null, "In"), h("div", null, "Out"), h("div", { style: "text-align:right" }, "Hours")),
+        rows));
+    }
+    return out;
+  }
+
+  // Owner sees when a time differs from what the button originally stamped.
+  function flagFor(rec, which) {
+    const v = rec[which], st = rec[which + "Stamp"];
+    if (has(v) && has(st) && Math.floor(v / 60000) !== Math.floor(st / 60000)) return "was " + fmtTime(st);
+    if (has(v) && !has(st)) return "added by hand";
+    if (!has(v) && has(st)) return "cleared (was " + fmtTime(st) + ")";
+    return null;
+  }
+
+  function timeCell(ctx, k, which, rec, d) {
+    const v = rec[which];
+    const flag = ctx.owner ? flagFor(rec, which) : null;
+    return h("div", { class: "tcell" },
+      h("button", {
+        type: "button", class: "t" + (has(v) ? "" : " empty"),
+        "aria-label": (which === "in" ? "Clock-in" : "Clock-out") + " time for " + d.toDateString(),
+        onclick: () => {
+          const base = new Date(has(v) ? v : has(rec[which + "Stamp"]) ? rec[which + "Stamp"] : Date.now());
+          S.editing = { uid: ctx.uid, k, which, value: pad(base.getHours()) + ":" + pad(base.getMinutes()) };
+          render(true);
+        }
+      }, has(v) ? fmtTime(v) : "—"),
+      flag ? h("span", { class: "flag" }, flag) : null);
+  }
+
+  function editorView(ctx, k, rec, d) {
+    const which = S.editing.which;
+    const input = h("input", { type: "time", id: "editTime", value: S.editing.value,
+      oninput: e => { S.editing.value = e.target.value; }, onchange: e => { S.editing.value = e.target.value; } });
+    const ref = F.doc(db, "workers", ctx.uid, "days", k);
+    const close = () => { S.editing = null; render(true); };
+    return h("div", { class: "editor" },
+      h("label", { for: "editTime" }, (which === "in" ? "Clock-in" : "Clock-out") + " time for " + DAYS[d.getDay()] + " " + fmtShort(d)),
+      input,
+      h("div", { class: "actions" },
+        h("button", { type: "button", class: "b-plain", onclick: close }, "Cancel"),
+        has(rec[which]) ? h("button", { type: "button", class: "b-clear", onclick: () => {
+          F.setDoc(ref, { date: k, [which]: null, updatedAt: Date.now() }, { merge: true }).catch(fail);
+          close();
+        } }, "Clear") : null,
+        h("button", { type: "button", class: "b-go", onclick: () => {
+          const v = input.value || S.editing.value;
+          if (!v) return;
+          const [hh, mm] = v.split(":").map(Number);
+          const dt = parseKey(k); dt.setHours(hh, mm, 0, 0);
+          F.setDoc(ref, { date: k, [which]: dt.getTime(), updatedAt: Date.now() }, { merge: true }).catch(fail);
+          close();
+        } }, "Save")));
+  }
+
+  // ----- the big button -----
+  function buttonInfo(now) {
+    if (!S.todayReady) return { dis: true, big: "Loading…", sub: "Getting your saved times" };
+    const jp = S.justPunched;
+    if (jp && Date.now() - jp.at < 2500)
+      return { dis: true, out: jp.what === "out", big: jp.what === "in" ? "Clocked in ✓" : "Clocked out ✓", sub: "Saved at " + fmtTime(jp.at) };
+    if (isWeekend(now)) return { dis: true, big: "Weekend", sub: "Clocking works Monday to Friday" };
+    const rec = S.today;
+    if (!has(rec.in)) return { big: "Clock in", sub: "Stamps " + fmtTime(now) + " for today", status: "Not clocked in yet today." };
+    if (!has(rec.out)) return { out: true, big: "Clock out", sub: "Stamps " + fmtTime(now) + " for today",
+      statusEl: ["On the clock since ", h("b", null, fmtTime(rec.in)), " (" + fmtDur(Math.max(0, Math.floor((now - rec.in) / 60000))) + " so far)"] };
+    return { dis: true, big: "Done for today", sub: "Tap a time below to fix it",
+      statusEl: ["You worked ", h("b", null, fmtDur(Math.max(0, paidMin(rec, S.me.rounding || 0)))), " today."] };
+  }
+
+  function punch() {
+    const now = new Date();
+    if (!S.todayReady || isWeekend(now)) return;
+    if (S.justPunched && Date.now() - S.justPunched.at < 2500) return; // ignore double taps
+    const k = keyOf(now), ms = now.getTime();
+    if (k !== S.todayKey) { workerToday(); return; }
+    const rec = S.today || {};
+    let upd, what;
+    if (!has(rec.in)) { upd = { date: k, in: ms, updatedAt: ms }; if (!has(rec.inStamp)) upd.inStamp = ms; what = "in"; }
+    else if (!has(rec.out)) { upd = { date: k, out: ms, updatedAt: ms }; if (!has(rec.outStamp)) upd.outStamp = ms; what = "out"; }
+    else return;
+    S.today = Object.assign({}, rec, upd);
+    S.justPunched = { what, at: ms };
+    // Saves on the phone instantly; uploads in the background (works with no signal).
+    F.setDoc(F.doc(db, "workers", S.user.uid, "days", k), upd, { merge: true }).catch(fail);
+    if (navigator.vibrate) { try { navigator.vibrate(30); } catch (e) {} }
+    render(true);
+    setTimeout(() => render(), 2600);
+  }
+
+  function sendCard(start, days, rnd, total) {
+    const lines = [];
+    lines.push("Timecard for " + S.me.name);
+    lines.push("Pay period: " + fmtMD(start) + " to " + fmtMD(addDays(start, 11)));
+    lines.push("");
+    for (let w = 0; w < 2; w++) {
+      lines.push("WEEK " + (w + 1));
+      let wk = 0;
+      days.slice(w * 5, w * 5 + 5).forEach(d => {
+        const rec = S.days[keyOf(d)] || {};
+        const m = paidMin(rec, rnd);
+        if (m > 0) wk += m;
+        const t = (has(rec.in) ? fmtTime(rec.in) : "--") + " to " + (has(rec.out) ? fmtTime(rec.out) : "--");
+        lines.push(DAYS[d.getDay()] + " " + fmtShort(d) + ":  " + t + "  =  " + (m === null ? "0h 00m" : m === -1 ? "check times" : fmtDur(m)));
+      });
+      lines.push("Week " + (w + 1) + " total: " + fmtDur(wk));
+      lines.push("");
+    }
+    lines.push("2-WEEK TOTAL: " + fmtDur(total));
+    if (rnd) lines.push("(Hours rounded to " + rnd + " minutes.)");
+    const subject = "Timecard: " + S.me.name + ", " + fmtMD(start) + " to " + fmtMD(addDays(start, 11));
+    F.setDoc(F.doc(db, "workers", S.user.uid, "sends", keyOf(start)), { sentAt: Date.now(), totalMinutes: total }).catch(() => {});
+    window.location.href = "mailto:" + encodeURIComponent(S.pub.payEmail) +
+      "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(lines.join("\n"));
+  }
+
+  // ----- owner console -----
+  function ownerView() {
+    const title = (S.pub && S.pub.businessName) || "Time Clock";
+    const out = [topbar(title, "Owner console"), toastEl()];
+    if (!S.pubReady) { out.push(h("p", { class: "muted" }, "Loading…")); return out; }
+    if (S.sel && S.workers[S.sel]) { out.push(workerDetail(S.sel)); return out; }
+    out.push(h("div", { class: "tabs" },
+      h("button", { type: "button", class: S.tab === "team" ? "on" : "", onclick: () => { S.tab = "team"; render(true); } }, "Team"),
+      h("button", { type: "button", class: S.tab === "settings" ? "on" : "", onclick: () => { S.tab = "settings"; render(true); } }, "Settings")));
+    out.push(S.tab === "team" ? teamView() : settingsView());
+    return out;
+  }
+
+  function todayStatus(uid) {
+    const rec = (S.wDays[uid] || {})[keyOf(new Date())] || {};
+    if (has(rec.in) && !has(rec.out)) return { on: true, text: "On the clock since " + fmtTime(rec.in) };
+    if (has(rec.in) && has(rec.out)) return { on: false, text: "Clocked out at " + fmtTime(rec.out) };
+    return { on: false, text: "Not in today" };
+  }
+
+  function teamView() {
+    const start = periodStart(S.offset), days = periodDays(start), pk = keyOf(start);
+    const all = Object.entries(S.workers).sort((a, b) => (a[1].name || "").localeCompare(b[1].name || ""));
+    const active = all.filter(([, w]) => w.active !== false), removed = all.filter(([, w]) => w.active === false);
+    if (!S.workersReady) return h("p", { class: "muted" }, "Loading your team…");
+    const onNow = active.filter(([uid]) => todayStatus(uid).on).length;
+    return [
+      active.length ? h("p", { class: "summary" }, h("b", null, onNow + " of " + active.length), " on the clock right now") : null,
+      periodNav(start, () => ownerPeriod(true)),
+      active.length ? null : h("div", { class: "card" }, h("h3", null, "No workers yet"),
+        h("p", null, "Go to Settings and share your invite. Workers create an account with your team code and show up here.")),
+      active.map(([uid, w]) => {
+        const st = todayStatus(uid);
+        const total = periodTotal(days, S.wDays[uid] || {}, w.rounding || 0);
+        const sent = (S.wSends[uid] || {})[pk];
+        return h("button", { class: "wcard", type: "button", onclick: () => { S.sel = uid; S.editing = null; S.confirmRemove = false; render(true); window.scrollTo(0, 0); } },
+          h("div", null, h("div", { class: "wname" }, w.name || w.email),
+            h("div", { class: "wstat" }, h("span", { class: "dot" + (st.on ? " on" : "") }), st.text)),
+          h("div", { class: "whrs" }, fmtDur(total), sent ? h("div", null, h("span", { class: "badge" }, "Sent")) : null));
+      }),
+      removed.length ? h("div", { class: "card", style: "margin-top:20px" }, h("h3", null, "Removed workers"),
+        removed.map(([uid, w]) => h("div", { class: "removed" }, h("span", null, w.name || w.email),
+          h("button", { class: "link", type: "button", onclick: () => F.updateDoc(F.doc(db, "workers", uid), { active: true }).catch(fail) }, "Add back")))) : null
+    ];
+  }
+
+  function workerDetail(uid) {
+    const w = S.workers[uid];
+    const rnd = w.rounding || 0;
+    const start = periodStart(S.offset), days = periodDays(start);
+    const recs = S.wDays[uid] || {};
+    const total = periodTotal(days, recs, rnd);
+    const sent = (S.wSends[uid] || {})[keyOf(start)];
+    const sel = h("select", { id: "rnd", onchange: e => {
+      F.updateDoc(F.doc(db, "workers", uid), { rounding: Number(e.target.value) }).catch(fail);
+    } }, [0, 5, 10, 15, 30].map(n => h("option", { value: String(n), selected: n === rnd }, n ? "Round to " + n + " minutes" : "No rounding")));
+    return [
+      h("button", { class: "link", type: "button", onclick: () => { S.sel = null; S.editing = null; render(true); } }, "‹ Back to team"),
+      h("h2", { style: "margin:6px 4px 0;font-size:1.6rem;font-stretch:112%" }, w.name || "Worker"),
+      h("p", { class: "note", style: "margin-bottom:14px" }, (w.email || "") + " · " + todayStatus(uid).text),
+      periodNav(start, () => ownerPeriod(true)),
+      weeksView(days, recs, rnd, { uid, owner: true }),
+      h("div", { class: "total" }, h("span", null, "2-week total"), h("strong", null, fmtDur(total))),
+      h("p", { class: "note" }, sent ? "Timecard sent " + fmtWhen(sent.sentAt) : "Timecard not sent yet for this period."),
+      h("p", { class: "note" }, "Red notes show when a time was changed from what the button stamped. Tap any time to fix it."),
+      h("div", { class: "spacer" }),
+      h("div", { class: "card" }, h("h3", null, "Rounding"),
+        h("p", null, "Clock-in rounds down and clock-out rounds up, in the worker's favor."),
+        h("div", { class: "field", style: "margin:0" }, sel)),
+      S.confirmRemove
+        ? h("div", { class: "card" }, h("h3", null, "Remove " + (w.name || "this worker") + "?"),
+            h("p", null, "They won't be able to clock in anymore. Their saved times stay, and you can add them back later."),
+            h("div", { class: "actions" },
+              h("button", { type: "button", class: "b-plain", onclick: () => { S.confirmRemove = false; render(true); } }, "Cancel"),
+              h("button", { type: "button", class: "b-danger", onclick: () => {
+                F.updateDoc(F.doc(db, "workers", uid), { active: false }).catch(fail);
+                S.confirmRemove = false; S.sel = null; render(true);
+              } }, "Remove")))
+        : h("button", { class: "btn danger", type: "button", onclick: () => { S.confirmRemove = true; render(true); } }, "Remove from team")
+    ];
+  }
+
+  function settingsView() {
+    const pub = S.pub || {};
+    const pubRef = F.doc(db, "config", "public");
+    const nameIn = h("input", { type: "text", id: "bn", value: pub.businessName || "", placeholder: "Your business name" });
+    const mailIn = h("input", { type: "email", id: "pe", value: pub.payEmail || "", autocapitalize: "none" });
+    const dateIn = h("input", { type: "date", id: "ps", value: pub.periodStart || "" });
+    const code = S.priv && S.priv.joinCode;
+    const link = location.origin + location.pathname;
+    const invite = "Join " + (pub.businessName || "our") + " time clock: " + link + "\nCreate an account and use team code: " + (code || "");
+    const saveBtn = fn => h("button", { class: "btn", type: "button", style: "margin-top:10px", onclick: fn }, "Save");
+
+    return [
+      h("div", { class: "card" }, h("h3", null, "Invite workers"),
+        h("p", null, "Workers open the link, tap Create account, and enter this code."),
+        h("div", { class: "code" }, code || "…"),
+        h("div", { class: "stack" },
+          h("button", { class: "btn", type: "button", onclick: async () => {
+            try {
+              if (navigator.share) await navigator.share({ text: invite });
+              else { await navigator.clipboard.writeText(invite); toast("Invite copied. Paste it into a text to your workers."); }
+            } catch (e) {}
+          } }, "Share invite"),
+          h("button", { class: "btn ghost", type: "button", onclick: () => {
+            F.setDoc(F.doc(db, "config", "private"), { joinCode: genCode() }).then(() => toast("New code made. The old one won't work for new sign-ups.")).catch(fail);
+          } }, "Make a new code")),
+        h("p", { style: "margin:12px 0 0" }, "Making a new code doesn't affect workers who already joined.")),
+
+      h("div", { class: "card" }, h("h3", null, "Where timecards get sent"),
+        h("p", null, "When a worker taps Send, their email opens addressed to this person."),
+        h("div", { class: "field", style: "margin:0" }, mailIn),
+        saveBtn(() => {
+          const v = mailIn.value.trim();
+          if (!/^\S+@\S+\.\S+$/.test(v)) return toast("That email doesn't look right.", true);
+          F.setDoc(pubRef, { payEmail: v }, { merge: true }).then(() => toast("Saved.")).catch(fail);
+        })),
+
+      h("div", { class: "card" }, h("h3", null, "Pay periods"),
+        h("p", null, "Each pay period is 2 weeks, Monday to Friday. Pick the Monday any pay period starts on, and the rest follow automatically."),
+        h("div", { class: "field", style: "margin:0" }, dateIn),
+        saveBtn(() => {
+          if (!dateIn.value) return toast("Pick a date.", true);
+          const mon = keyOf(mondayOf(parseKey(dateIn.value)));
+          F.setDoc(pubRef, { periodStart: mon }, { merge: true }).then(() => {
+            S.offset = 0; ownerPeriod(true);
+            toast(mon === dateIn.value ? "Saved." : "Saved. Moved to the Monday of that week (" + fmtMD(parseKey(mon)) + ").");
+          }).catch(fail);
+        })),
+
+      h("div", { class: "card" }, h("h3", null, "Business name"),
+        h("p", null, "Shows at the top of everyone's app."),
+        h("div", { class: "field", style: "margin:0" }, nameIn),
+        saveBtn(() => { F.setDoc(pubRef, { businessName: nameIn.value.trim().slice(0, 60) }, { merge: true }).then(() => toast("Saved.")).catch(fail); }))
+    ];
+  }
+
+  // ---------- live clock ----------
+  function updateLive() {
+    const now = new Date();
+    const dEl = document.getElementById("date"), cEl = document.getElementById("clock");
+    if (dEl) dEl.textContent = now.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
+    if (cEl) {
+      const p = now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true }).split(/\s+/);
+      cEl.textContent = p[0];
+      if (p[1]) cEl.append(h("small", null, p[1]));
+    }
+    const btn = document.getElementById("punch");
+    if (btn && S.me) {
+      const b = buttonInfo(now);
+      btn.disabled = !!b.dis;
+      btn.classList.toggle("out", !!b.out);
+      document.getElementById("punchBig").textContent = b.big;
+      document.getElementById("punchSub").textContent = b.sub;
+      const st = document.getElementById("status");
+      st.replaceChildren(...(b.statusEl || (b.status ? [b.status] : [])));
+    }
+  }
+
+  let lastDay = keyOf(new Date());
+  setInterval(() => {
+    const k = keyOf(new Date());
+    if (k !== lastDay) {
+      lastDay = k;
+      if (S.user && !S.isOwner && S.me) { workerToday(); workerPeriod(); }
+      if (S.user && S.isOwner) ownerPeriod(true);
+      render();
+    } else updateLive();
+  }, 1000);
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") render();
+  });
+
+  render(true);
 })();
 </script>
 </body>
