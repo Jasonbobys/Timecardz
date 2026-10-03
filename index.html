@@ -241,7 +241,7 @@ const OWNER_EMAILS = ["paxakz21345@gmail.com", "paxa_kz@hotmail.com"];
       workers: {}, workersReady: false, wDays: {}, wSends: {},
       tab: "team", sel: null, confirmRemove: false,
       authMode: "signin", authMsg: "", authErr: false, busy: false,
-      joinMsg: "", toast: "", toastErr: false
+      joinMsg: "", toast: "", toastErr: false, draft: {}
     };
   }
   S = freshState();
@@ -266,7 +266,7 @@ const OWNER_EMAILS = ["paxakz21345@gmail.com", "paxa_kz@hotmail.com"];
   function anchor() { const k = S.pub && S.pub.periodStart; return k ? parseKey(k) : mondayOf(new Date()); }
   function periodStart(offset) {
     const a = anchor();
-    const idx = Math.floor((dayNum(new Date()) - dayNum(a)) / 14) + offset;
+    const idx = Math.floor((dayNum(new Date()) - dayNum(a) + 2) / 14) + offset;
     return addDays(a, idx * 14);
   }
   function periodDays(start) {
@@ -428,20 +428,27 @@ const OWNER_EMAILS = ["paxakz21345@gmail.com", "paxa_kz@hotmail.com"];
   }
 
   // ---------- rendering ----------
-  let pendingRender = false;
+  let pendingRender = false, pointerDown = false;
+  document.addEventListener("pointerdown", () => { pointerDown = true; }, true);
+  const releasePointer = () => setTimeout(() => {
+    pointerDown = false;
+    if (pendingRender && !typing()) render(true);
+  }, 250);
+  document.addEventListener("pointerup", releasePointer, true);
+  document.addEventListener("pointercancel", releasePointer, true);
   function typing() {
     const ae = document.activeElement;
     return ae && $app.contains(ae) && /^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName);
   }
   function render(force) {
-    if (!force && typing()) { pendingRender = true; updateLive(); return; }
+    if (!force && (typing() || pointerDown)) { pendingRender = true; updateLive(); return; }
     pendingRender = false;
     const y = window.scrollY;
     $app.replaceChildren(...[].concat(view()).flat(Infinity).filter(Boolean));
     updateLive();
     window.scrollTo(0, y);
   }
-  document.addEventListener("focusout", () => setTimeout(() => { if (pendingRender && !typing()) render(true); }, 50));
+  document.addEventListener("focusout", () => setTimeout(() => { if (pendingRender && !typing() && !pointerDown) render(true); }, 300));
 
   function view() {
     if (!S.authReady) return h("p", { class: "muted" }, "Loading…");
@@ -585,6 +592,7 @@ const OWNER_EMAILS = ["paxakz21345@gmail.com", "paxa_kz@hotmail.com"];
     return [
       topbar(S.pub.businessName || "Time Clock", "Hi, " + S.me.name),
       toastEl(),
+      paydayNotes(start),
       h("section", { class: "now" }, h("p", { class: "date", id: "date" }), h("p", { class: "clock", id: "clock" })),
       h("button", { class: "punch", id: "punch", type: "button", onclick: punch },
         h("span", { class: "big", id: "punchBig" }), h("span", { class: "sub", id: "punchSub" })),
@@ -603,6 +611,20 @@ const OWNER_EMAILS = ["paxakz21345@gmail.com", "paxa_kz@hotmail.com"];
         "Tap any time to fix it. ",
         S.todayPending ? "No signal right now: your times are saved on this phone and will upload automatically." : "All times saved.")
     ];
+  }
+
+  function paydayNotes(start) {
+    if (S.offset !== 0) return null;
+    const todayK = keyOf(new Date());
+    const out = [];
+    if (todayK === keyOf(addDays(start, 11)) && !S.sends[keyOf(start)])
+      out.push(h("div", { class: "msg" }, h("b", null, "Today is payday. "), "When you clock out, tap Send timecard at the bottom."));
+    const prev = addDays(start, -14);
+    const daysIn = dayNum(new Date()) - dayNum(start);
+    if (!S.sends[keyOf(prev)] && daysIn >= -2 && daysIn <= 7)
+      out.push(h("div", { class: "msg" }, "Your last timecard (" + fmtMD(prev) + " to " + fmtMD(addDays(prev, 11)) + ") hasn't been sent yet. ",
+        h("button", { class: "link", type: "button", style: "padding:0", onclick: () => { S.offset = -1; S.editing = null; workerPeriod(); render(true); window.scrollTo(0, 0); } }, "Open it to send")));
+    return out;
   }
 
   function periodNav(start, onChange) {
@@ -778,7 +800,8 @@ const OWNER_EMAILS = ["paxakz21345@gmail.com", "paxa_kz@hotmail.com"];
     if (!S.workersReady) return h("p", { class: "muted" }, "Loading your team…");
     const onNow = active.filter(([uid]) => todayStatus(uid).on).length;
     return [
-      active.length ? h("p", { class: "summary" }, h("b", null, onNow + " of " + active.length), " on the clock right now") : null,
+      active.length ? h("p", { class: "summary" }, h("b", null, onNow + " of " + active.length), " on the clock right now. Payday: " +
+        addDays(periodStart(0), 11).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" }) + ".") : null,
       periodNav(start, () => ownerPeriod(true)),
       active.length ? null : h("div", { class: "card" }, h("h3", null, "No workers yet"),
         h("p", null, "Go to Settings and share your invite. Workers create an account with your team code and show up here.")),
@@ -835,14 +858,18 @@ const OWNER_EMAILS = ["paxakz21345@gmail.com", "paxa_kz@hotmail.com"];
 
   function settingsView() {
     const pub = S.pub || {};
+    const D = S.draft;
     const pubRef = F.doc(db, "config", "public");
-    const nameIn = h("input", { type: "text", id: "bn", value: pub.businessName || "", placeholder: "Your business name" });
-    const mailIn = h("input", { type: "email", id: "pe", value: pub.payEmail || "", autocapitalize: "none" });
-    const dateIn = h("input", { type: "date", id: "ps", value: pub.periodStart || "" });
+    const cur = periodStart(0), payday = addDays(cur, 11);
+    const nameIn = h("input", { type: "text", id: "bn", value: D.bn !== undefined ? D.bn : (pub.businessName || ""), placeholder: "Your business name", oninput: e => { D.bn = e.target.value; } });
+    const mailIn = h("input", { type: "email", id: "pe", value: D.pe !== undefined ? D.pe : (pub.payEmail || ""), autocapitalize: "none", oninput: e => { D.pe = e.target.value; } });
+    const dateIn = h("input", { type: "date", id: "ps", value: D.ps !== undefined ? D.ps : keyOf(payday),
+      oninput: e => { D.ps = e.target.value; }, onchange: e => { D.ps = e.target.value; } });
     const code = S.priv && S.priv.joinCode;
     const link = location.origin + location.pathname;
     const invite = "Join " + (pub.businessName || "our") + " time clock: " + link + "\nCreate an account and use team code: " + (code || "");
     const saveBtn = fn => h("button", { class: "btn", type: "button", style: "margin-top:10px", onclick: fn }, "Save");
+    const longDate = d => d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
 
     return [
       h("div", { class: "card" }, h("h3", null, "Invite workers"),
@@ -860,31 +887,35 @@ const OWNER_EMAILS = ["paxakz21345@gmail.com", "paxa_kz@hotmail.com"];
           } }, "Make a new code")),
         h("p", { style: "margin:12px 0 0" }, "Making a new code doesn't affect workers who already joined.")),
 
+      h("div", { class: "card" }, h("h3", null, "Payday"),
+        h("p", null, "Pick any payday Friday. Each pay period is the 2 weeks (Monday to Friday) ending on payday, and a fresh card starts the Monday after."),
+        h("p", { style: "color:var(--ink)" }, "Current pay period: " + fmtMD(cur) + " to " + fmtMD(payday) + ". Next payday: " + longDate(payday) + "."),
+        h("div", { class: "field", style: "margin:0" }, h("label", { for: "ps" }, "A payday Friday"), dateIn),
+        saveBtn(() => {
+          const v = dateIn.value || D.ps;
+          if (!v) return toast("Pick a date.", true);
+          const picked = parseKey(v);
+          const fri = addDays(mondayOf(picked), 4);
+          const start = addDays(fri, -11);
+          F.setDoc(pubRef, { periodStart: keyOf(start) }, { merge: true }).then(() => {
+            delete D.ps; S.offset = 0; ownerPeriod(true);
+            toast((picked.getDay() === 5 ? "Saved." : "Saved. Moved to the Friday of that week, " + longDate(fri) + ".") + " Paydays are every other Friday from there.");
+          }).catch(fail);
+        })),
+
       h("div", { class: "card" }, h("h3", null, "Where timecards get sent"),
         h("p", null, "When a worker taps Send, their email opens addressed to this person."),
         h("div", { class: "field", style: "margin:0" }, mailIn),
         saveBtn(() => {
           const v = mailIn.value.trim();
           if (!/^\S+@\S+\.\S+$/.test(v)) return toast("That email doesn't look right.", true);
-          F.setDoc(pubRef, { payEmail: v }, { merge: true }).then(() => toast("Saved.")).catch(fail);
-        })),
-
-      h("div", { class: "card" }, h("h3", null, "Pay periods"),
-        h("p", null, "Each pay period is 2 weeks, Monday to Friday. Pick the Monday any pay period starts on, and the rest follow automatically."),
-        h("div", { class: "field", style: "margin:0" }, dateIn),
-        saveBtn(() => {
-          if (!dateIn.value) return toast("Pick a date.", true);
-          const mon = keyOf(mondayOf(parseKey(dateIn.value)));
-          F.setDoc(pubRef, { periodStart: mon }, { merge: true }).then(() => {
-            S.offset = 0; ownerPeriod(true);
-            toast(mon === dateIn.value ? "Saved." : "Saved. Moved to the Monday of that week (" + fmtMD(parseKey(mon)) + ").");
-          }).catch(fail);
+          F.setDoc(pubRef, { payEmail: v }, { merge: true }).then(() => { delete D.pe; toast("Saved."); }).catch(fail);
         })),
 
       h("div", { class: "card" }, h("h3", null, "Business name"),
         h("p", null, "Shows at the top of everyone's app."),
         h("div", { class: "field", style: "margin:0" }, nameIn),
-        saveBtn(() => { F.setDoc(pubRef, { businessName: nameIn.value.trim().slice(0, 60) }, { merge: true }).then(() => toast("Saved.")).catch(fail); }))
+        saveBtn(() => { F.setDoc(pubRef, { businessName: nameIn.value.trim().slice(0, 60) }, { merge: true }).then(() => { delete D.bn; toast("Saved."); }).catch(fail); }))
     ];
   }
 
